@@ -55,7 +55,6 @@ int verifyId(int id, ProductKeys *listReference){
         helper = listReference->head->next; // Set it to point to the first element of the list
 
         while(helper->next != NULL){ // Loop to verify all products of the list
-            printf("%d - %d\n", helper->id, id);
             if(helper->id == id){
                 alreadyExist = 1;
                 break;
@@ -73,12 +72,13 @@ int verifyId(int id, ProductKeys *listReference){
         alreadyExist = 0;
     }
 
-    free(helper); // Free the alocated memory of the extra pointer
+    helper = NULL; // Free the alocated memory of the extra pointer
+    free(helper);
     
     return id;
 }
 
-ProductKeys registerProduct(ProductKeys *listReference){
+void registerProduct(ProductKeys *listReference){
     
     Product *placeholder; // Create the product
     placeholder = malloc(sizeof(Product));
@@ -100,8 +100,6 @@ ProductKeys registerProduct(ProductKeys *listReference){
         listReference->tail->prev = placeholder;
         placeholder->prev = listReference->head; // Make the new element point to head and tail
         placeholder->next = listReference->tail;
-
-        return *listReference;
     }
 
     Product *helper; // Create an extra pointer
@@ -113,9 +111,8 @@ ProductKeys registerProduct(ProductKeys *listReference){
     placeholder->prev = helper; // And the new element point to both
     placeholder->next = listReference->tail;
  
-    free(helper); // Free the alocated memory of the extra pointer
-
-    return *listReference;
+    helper = NULL; // Free the alocated memory of the extra pointer
+    free(helper);
 }
 
 void listProducts(ProductKeys *listReference){
@@ -125,11 +122,12 @@ void listProducts(ProductKeys *listReference){
     helper = listReference->head->next; // Set the extra pointer to the first element of the list
 
     while(helper->next != NULL){
-        printf("\nId: %d\nName: %s\nPrice: %f\nStock: %d\n", helper->id, helper->name, helper->price, helper->stock);
+        printf("\nId: %d\nName: %s\nPrice: %.2f\nStock: %d\n", helper->id, helper->name, helper->price, helper->stock);
         helper = helper->next;
     }
 
-    free(helper); // Free the alocated memory of the extra pointer
+    helper = NULL; // Free the alocated memory of the extra pointer
+    free(helper);
 }
 
 // Main program
@@ -160,11 +158,12 @@ int main(){
 
             case(0): ; // Exit System
 
+                printf("\nExiting...\n\n");
                 exit(0); // Exit the code
             
             case(1): ; // Register Product
 
-                *listReference = registerProduct(listReference);
+                registerProduct(listReference);
                 break;
 
             case(2): ; // List Products
@@ -190,7 +189,7 @@ int main(){
         }
     }
 
-    printf("\nExiting...\n");
+    printf("\nExiting...\n\n");
 
     return 0;
 }
