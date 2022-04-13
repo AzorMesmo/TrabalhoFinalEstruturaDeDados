@@ -6,26 +6,25 @@
 
 // Definitions of structs
 
-struct _product { // The product itself
+typedef struct _product { // The product itself
    int id;
    char name[50];
    float price;
    int stock;
+   char unity[30];
    struct _product *next, *prev;
-};
-typedef struct _product Product;
+} Product;
 
 typedef struct { // Stores both tips of our product list 
    Product *head;
    Product *tail;
 } ProductKeys;
 
-struct _cart { // The list of products that will be bought
+typedef struct _cart { // The list of products that will be bought
    int id;
    int amount;
    struct _product *next, *prev;
-};
-typedef struct _cart Cart;
+} Cart;
 
 // Definitions of functions
 
@@ -91,6 +90,8 @@ void registerProduct(ProductKeys *listReference){
     scanf("%f", &placeholder->price);
     printf("\nType the STOCK of the Product: ");
     scanf("%d", &placeholder->stock);
+    printf("\nType the product's UNITY of Measure: ");
+    scanf("%s", placeholder->unity);
     placeholder->next = NULL; // Set the pointers to NULL
     placeholder->prev = NULL;
 
@@ -122,12 +123,46 @@ void listProducts(ProductKeys *listReference){
     helper = listReference->head->next; // Set the extra pointer to the first element of the list
 
     while(helper->next != NULL){
-        printf("\nId: %d\nName: %s\nPrice: %.2f\nStock: %d\n", helper->id, helper->name, helper->price, helper->stock);
+        printf("\nId: %d\nName: %s\nPrice: %.2f\nStock: %d\nUnity: %s\n", helper->id, helper->name, helper->price, helper->stock, helper->unity);
         helper = helper->next;
     }
 
     helper = NULL; // Free the alocated memory of the extra pointer
     free(helper);
+}
+
+// Search the product
+
+Product* searchProduct(ProductKeys *listReference)
+{
+    Product *aux; // Create a extra pointer
+    int valueID;
+    aux = malloc(sizeof(Product));
+    aux = listReference->head->next; // Set the extra pointer to the first element of the list
+
+    printf("\nEnter the product code to the view it ");
+    scanf("%d", &valueID);
+
+    if (aux == NULL) // Checks if aux was ever created
+    {
+        printf("\nProduct not found :(\n");
+    }
+    
+    for (; aux != NULL; aux = aux->next) // Checks if aux was ever created
+    {
+        if (valueID == aux->id) // Compares if the value of the id entered is equal to the id in the list
+        {
+            printf("\nProduct found :)\n\n");
+            printf("Name: %s\nPrice: $%.2f\nAmount: %d %s\n", aux->name, aux->price, aux->stock, aux->unity);
+            break;
+        }else
+        {
+            printf("\nProduct not found :(\n");
+            break;
+        }
+        aux->next = NULL; // Free the alocated memory of the extra pointer (aux)
+        free(aux);
+    }
 }
 
 // Main program
@@ -172,7 +207,7 @@ int main(){
                 break;
 
             case(3): ; // Search Product
-                printf("WIP");
+                searchProduct(listReference);
                 break;
 
             case(4): ; // Delete Product
