@@ -48,16 +48,19 @@ int verifyId(int id, ProductKeys *listReference){
     }
 
     Product *helper; // Create an extra pointer
-    helper = malloc(sizeof(Product));
-    helper = listReference->head->next; // Set it to point to the first element of the list
+    helper = malloc(sizeof(Product)); 
 
     while(loop == 1){ // Main loop
-    
+
+        helper = listReference->head->next; // Set it to point to the first element of the list
+
         while(helper->next != NULL){ // Loop to verify all products of the list
+            printf("%d - %d\n", helper->id, id);
             if(helper->id == id){
                 alreadyExist = 1;
                 break;
             }
+            helper = helper->next;
         }
 
         if(alreadyExist == 1){ // If id already exists
@@ -66,12 +69,67 @@ int verifyId(int id, ProductKeys *listReference){
         }else{
             loop = 0; // Break the main loop
         }
+
+        alreadyExist = 0;
     }
 
-    helper = NULL; // Free the alocated memory of the extra pointer
-    free(helper);
+    free(helper); // Free the alocated memory of the extra pointer
     
     return id;
+}
+
+ProductKeys registerProduct(ProductKeys *listReference){
+    
+    Product *placeholder; // Create the product
+    placeholder = malloc(sizeof(Product));
+    printf("\nType the ID of the Product: "); // Scan and storage values on new product
+    scanf("%d", &placeholder->id);
+    placeholder->id = verifyId(placeholder->id, listReference); // Verify if the id is valid
+    printf("\nType the NAME of the Product: ");
+    scanf("%s", placeholder->name);
+    printf("\nType the PRICE of the Product: ");
+    scanf("%f", &placeholder->price);
+    printf("\nType the STOCK of the Product: ");
+    scanf("%d", &placeholder->stock);
+    placeholder->next = NULL; // Set the pointers to NULL
+    placeholder->prev = NULL;
+
+    if(listReference->head->next == NULL){ // If the list is empty
+
+        listReference->head->next = placeholder; // Make head and tail point to the new element
+        listReference->tail->prev = placeholder;
+        placeholder->prev = listReference->head; // Make the new element point to head and tail
+        placeholder->next = listReference->tail;
+
+        return *listReference;
+    }
+
+    Product *helper; // Create an extra pointer
+    helper = malloc(sizeof(Product));
+    helper = listReference->tail->prev; // Set the extra pointer to the last element of the list
+
+    helper->next = placeholder; // Make the tail and the last element point to the new
+    listReference->tail->prev = placeholder; // (if the list is empty, the "last element" will be the head)
+    placeholder->prev = helper; // And the new element point to both
+    placeholder->next = listReference->tail;
+ 
+    free(helper); // Free the alocated memory of the extra pointer
+
+    return *listReference;
+}
+
+void listProducts(ProductKeys *listReference){
+
+    Product *helper; // Create an extra pointer
+    helper = malloc(sizeof(Product));
+    helper = listReference->head->next; // Set the extra pointer to the first element of the list
+
+    while(helper->next != NULL){
+        printf("\nId: %d\nName: %s\nPrice: %f\nStock: %d\n", helper->id, helper->name, helper->price, helper->stock);
+        helper = helper->next;
+    }
+
+    free(helper); // Free the alocated memory of the extra pointer
 }
 
 // Main program
@@ -102,48 +160,17 @@ int main(){
 
             case(0): ; // Exit System
 
-                break; // Exit the main loop making the code end
+                exit(0); // Exit the code
             
             case(1): ; // Register Product
 
-                Product *placeholder; // Create the product
-                placeholder = malloc(sizeof(Product));
-                printf("\nType the ID of the Product: "); // Scan and storage values on new product
-                scanf("%d", placeholder->id);
-                placeholder->id = verifyId(placeholder->id, listReference); // Verify if the id is valid
-                printf("\nType the NAME of the Product: ");
-                scanf("%s", placeholder->name);
-                printf("\nType the PRICE of the Product: ");
-                scanf("%f", &placeholder->price);
-                printf("\nType the STOCK of the Product: ");
-                scanf("%d", placeholder->stock);
-                placeholder->next = NULL; // Set the pointers to NULL
-                placeholder->prev = NULL;
-
-                Product *helper; // Create an extra pointer
-                helper = malloc(sizeof(Product));
-                helper = listReference->tail->prev; // Set it to point to the last element of the list
-
-                helper->next = placeholder; // Make the tail and the last element point to the new
-                listReference->tail->prev = placeholder; // (if the list is empty, the "last element" will be the head)
-                placeholder->prev = helper; // And the new element point to both
-                placeholder->next = listReference->tail;
-
-                helper = NULL; // Free the alocated memory of the extra pointer
-                free(helper);
+                *listReference = registerProduct(listReference);
+                break;
 
             case(2): ; // List Products
                 
-                Product *helper; // Create an extra pointer
-                helper = malloc(sizeof(Product));
-                helper = listReference->head->next; // Set it to point to the first element of the list
-
-                while(helper->next != NULL){
-                    printf("\nId: %d\nName: %s\nPrice: %f\nStock: %d", helper->id, helper->name, helper->price, helper->stock);
-                }
-
-                helper = NULL; // Free the alocated memory of the extra pointer
-                free(helper);
+                listProducts(listReference);
+                break;
 
             case(3): ; // Search Product
                 printf("WIP");
@@ -162,6 +189,8 @@ int main(){
                 break;
         }
     }
+
+    printf("\nExiting...\n");
 
     return 0;
 }
