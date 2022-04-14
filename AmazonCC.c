@@ -11,7 +11,6 @@ typedef struct _product { // The product itself
    char name[50];
    float price;
    int stock;
-   char unity[30];
    struct _product *next, *prev;
 } Product;
 
@@ -26,6 +25,11 @@ typedef struct _cart { // The list of products that will be bought
    struct _product *next, *prev;
 } Cart;
 
+typedef struct { // Stores both tips of our cart list 
+   Cart *head;
+   Cart *tail;
+} CartKeys;
+
 // Definitions of basic functions
 
 int verifyMenuInput(int input){ // Verify if the user input is valid to navigate in main menu
@@ -38,11 +42,11 @@ int verifyMenuInput(int input){ // Verify if the user input is valid to navigate
     return input; // When valid return input
 }
 
-int verifyId(int id, ProductKeys *listReference){ 
+int verifyId(int id, ProductKeys *productsReference){ 
 
     int alreadyExist, loop = 1; // Declaration of extra variables
 
-    if(listReference->head->next == NULL){ // If there is no elements in the list
+    if(productsReference->head->next == productsReference->tail){ // If there is no elements in the list
         return id; // Stop the function now
     }
 
@@ -51,7 +55,7 @@ int verifyId(int id, ProductKeys *listReference){
 
     while(loop == 1){ // Main loop
 
-        helper = listReference->head->next; // Set it to point to the first element of the list
+        helper = productsReference->head->next; // Set it to point to the first element of the list
 
         while(helper->next != NULL){ // Loop to verify all products of the list
             if(helper->id == id){
@@ -61,8 +65,8 @@ int verifyId(int id, ProductKeys *listReference){
             helper = helper->next;
         }
 
-        if(alreadyExist == 1){ // If id already exists
-            printf("ID already exist, please type another: ");
+        if(alreadyExist == 1 || id < 0){ // If id already exists
+            printf("ID already exist ou it's a negative number, please type another: ");
             scanf("%d", &id); // Get another
         }else{
             loop = 0; // Break the main loop
@@ -77,11 +81,11 @@ int verifyId(int id, ProductKeys *listReference){
     return id;
 }
 
-ProductKeys clearProducts(ProductKeys *listReference){
+ProductKeys clearProducts(ProductKeys *productsReference){
 
     Product *helper; // Create an extra pointer
     helper = malloc(sizeof(Product));
-    helper = listReference->head; // Set the extra pointer to the first element of the list
+    helper = productsReference->head; // Set the extra pointer to the first element of the list of products
 
     Product *eraser; // Create an extra pointer to free values
 
@@ -95,53 +99,53 @@ ProductKeys clearProducts(ProductKeys *listReference){
 
     free(helper);
 
-    return *listReference;
+    return *productsReference;
 }
 
-void registerProduct(ProductKeys *listReference){
+void registerProduct(ProductKeys *productsReference){
     
     Product *placeholder; // Create the product
     placeholder = malloc(sizeof(Product));
     printf("\nType the ID of the Product: "); // Scan and storage values on new product
     scanf("%d", &placeholder->id);
-    placeholder->id = verifyId(placeholder->id, listReference); // Verify if the id is valid
+    placeholder->id = verifyId(placeholder->id, productsReference); // Verify if the id is valid
     printf("\nType the NAME of the Product: ");
     scanf("%s", placeholder->name);
     printf("\nType the PRICE of the Product: ");
     scanf("%f", &placeholder->price);
     printf("\nType the STOCK of the Product: ");
     scanf("%d", &placeholder->stock);
-    printf("\nType the product's UNITY of Measure: ");
-    scanf("%s", placeholder->unity);
     placeholder->next = NULL; // Set the pointers to NULL
     placeholder->prev = NULL;
 
     Product *helper; // Create an extra pointer
     helper = malloc(sizeof(Product));
-    helper = listReference->tail->prev; // Set the extra pointer to the last element of the list
+    helper = productsReference->tail->prev; // Set the extra pointer to the last element of the list of products
 
     helper->next = placeholder; // Make the tail and the last element point to the new
-    listReference->tail->prev = placeholder; // (if the list is empty, the "last element" will be the head)
+    productsReference->tail->prev = placeholder; // (if the list is empty, the "last element" will be the head)
     placeholder->prev = helper; // And the new element point to both
-    placeholder->next = listReference->tail;
+    placeholder->next = productsReference->tail;
  
-    helper = NULL; // Free the alocated memory of the extra pointer
+    helper = NULL; // Free the alocated memory of the placeholder and helper
+    placeholder = NULL;
     free(helper);
+    free(placeholder);
 }
 
-void listProducts(ProductKeys *listReference){
+void listProducts(ProductKeys *productsReference){
 
     Product *helper; // Create an extra pointer
     helper = malloc(sizeof(Product));
-    helper = listReference->head->next; // Set the extra pointer to the first element of the list
+    helper = productsReference->head->next; // Set the extra pointer to the first element of the list of products
 
-    if(listReference->head->next == listReference->tail){ // If the list is empty
+    if(productsReference->head->next == productsReference->tail){ // If the list is empty
         printf("\nNo products have been added!\n");
         return;
     }
 
     while(helper->next != NULL){ // Print loop
-        printf("\nId: %d\nName: %s\nPrice: $%.2f\nStock: %d\nUnity: %s\n", helper->id, helper->name, helper->price, helper->stock, helper->unity);
+        printf("\nId: %d\nName: %s\nPrice: $%.2f\nStock: %d\n", helper->id, helper->name, helper->price, helper->stock);
         helper = helper->next;
     }
 
@@ -149,49 +153,45 @@ void listProducts(ProductKeys *listReference){
     free(helper);
 }
 
-void searchProduct(ProductKeys *listReference)
-{
-    if (listReference->head->next == listReference->tail) // Checks if the list has at least one product
-    {
+Product searchProduct(ProductKeys *productsReference){
+
+    Product *helper; // Create a extra pointer
+    helper = malloc(sizeof(Product));
+    helper = productsReference->head->next; // Set the extra pointer to the first element of the list of products
+
+    if(productsReference->head->next == productsReference->tail){ // Checks if the list has at least one product
         printf("\nNo products have been added.\n");
-        return;
+        helper->id = -1;
+        return *helper;
     }
 
-    Product *aux; // Create a extra pointer
-    aux = malloc(sizeof(Product));
-    aux = listReference->head->next; // Set the extra pointer to the first element of the list
-
-    int valueID, founded = 0;
+    int productId;
 
     printf("\nType the product id: ");
-    scanf("%d", &valueID);
+    scanf("%d", &productId);
     
-    while(aux != NULL) // Seach loop
-    {
-        if (valueID == aux->id) // Compares if the value of the id entered is equal to the id in the list
-        {
-            printf("\nProduct found.\n\n");
-            printf("Name: %s\nPrice: $%.2f\nAmount: %d %s\n", aux->name, aux->price, aux->stock, aux->unity);
-            founded = 1;
-            break;
+    while(helper != NULL){ // Seach loop
+
+        if (productId == helper->id){ // Verify if the value of the id entered is equal to the id in the list
+            printf("\nProduct found.\n"); // Print the product and exit the loop
+            printf("\nName: %s\nPrice: $%.2f\nAmount: %d\n", helper->name, helper->price, helper->stock);
+            return *helper;
         }
 
-        aux = aux->next;
+        helper = helper->next; // Go to the next element
     }
 
-    if(founded == 0){
-        printf("\nProduct not found.\n");
-    }
-
-    aux = NULL; // Free the alocated memory of the extra pointer (aux)
-    free(aux);
+    printf("\nProduct not found.\n");
+    helper = productsReference->head->next;
+    helper->id = -1;
+    return *helper;
 }
 
-ProductKeys deleteProduct(ProductKeys *listReference){
+ProductKeys deleteProduct(ProductKeys *productsReference){
 
-    if(listReference->head->next == listReference->tail){
+    if(productsReference->head->next == productsReference->tail){
         printf("\nNo products have been added!\n");
-        return *listReference;
+        return *productsReference;
     }
 
     int productId, founded = 0;
@@ -201,7 +201,7 @@ ProductKeys deleteProduct(ProductKeys *listReference){
 
     Product *helper; // Create an extra pointer
     helper = malloc(sizeof(Product));
-    helper = listReference->head->next; // Set the extra pointer to the first element of the list
+    helper = productsReference->head->next; // Set the extra pointer to the first element of the list of products
 
     while(helper->next != NULL){ // Main loop
 
@@ -238,14 +238,227 @@ ProductKeys deleteProduct(ProductKeys *listReference){
         printf("\nProduct not found.\n");
     }
 
-    return *listReference;
+    return *productsReference;
 }
 
 // Definitions of cart functions
 
-ProductKeys cart(ProductKeys *listReference){
+int verifyCartInput(int input){ // Verify if the user input is valid to navigate in cart menu
+
+    while(input > 4 || input < 0){ // Loop while the input is invalid
+        printf("Input not valid, try again: ");
+        scanf("%d", &input);
+    }
+
+    return input; // When valid return input
+}
+
+void chooseProducts(CartKeys *cartReference, ProductKeys *productsReference){
+
+    int amount, loop = 0;
+
+    Product *product; // Create an extra pointer to store the function return below
+    product = malloc(sizeof(Product));
+
+    *product = searchProduct(productsReference);
+
+    if(product->id == -1){ // If the product is not found, "break" this function
+        return;
+    }
+
+    printf("\nType the amount of the product that you wanna buy: ");
+    scanf("%d", &amount);
+
+    while(loop == 0){
+        if(amount > product->stock){
+            printf("This amount is bigger that our stock, please type another value: ");
+            scanf("%d", &amount);
+        }else{
+            break;
+        }
+    }
+    
+    Cart *placeholder; // Create a placeholder cart and allocate values in it
+    placeholder = malloc(sizeof(Cart));
+    placeholder->id = product->id;
+    placeholder->amount = amount;
+
+    Cart *helper; // Create an extra pointer 
+    helper = malloc(sizeof(Cart));
+    helper = cartReference->tail->prev; // Set the extra pointer to the last element of the cart list
+
+    helper->next = placeholder; // Make the tail and the last element point to the new
+    cartReference->tail->prev = placeholder; // (if the list is empty, the "last element" will be the head)
+    placeholder->prev = helper; // And the new element point to both
+    placeholder->next = cartReference->tail;
+ 
+    helper = NULL; // Free the alocated memory of the placeholder, helper and product
+    placeholder = NULL;
+    product = NULL;
+    free(helper);
+    free(placeholder);
+    free(product);
+
+}
+
+Product searchProductById(ProductKeys *productsReference, int id){
+
+    Product *helper; // Create a extra pointer
+    helper = malloc(sizeof(Product));
+    helper = productsReference->head->next; // Set the extra pointer to the first element of the list of products
+    
+    while(helper != NULL){ // Seach loop
+
+        if (id == helper->id){ // Verify if the value of the id entered is equal to the id in the list
+            printf("\nProduct found.\n"); // Print the product and exit the loop
+            printf("\nName: %s\nPrice: $%.2f\nAmount: %d\n", helper->name, helper->price, helper->stock);
+            return *helper;
+        }
+
+        helper = helper->next; // Go to the next element
+    }
+
+    printf("\nProduct not found.\n");
+    helper = productsReference->head->next;
+    helper->id = -1;
+    return *helper;
+}
+
+void calculateTotalPrice(CartKeys *cartReference, ProductKeys *productsReference){
+    
+    float total = 0;
+
+    Cart *helper; // Create an extra pointer
+    helper = malloc(sizeof(Cart));
+    helper = cartReference->head->next; // Set the extra pointer to the first element of the cart list
+
+    Product *product; // Create an extra product
+    product = malloc(sizeof(Product));
+
+    while(helper->next != NULL){ // Main loop
+
+        *product = searchProductById(productsReference, helper->id); // Stores the product
+        total = total + (product->price * helper->amount); // Calculate total
+        
+        helper = helper->next;
+    }
+
+    printf("\nThe cart price total it's $%.2f\n", total);
+
+    helper = NULL; // Free the alocated memory of the extra pointer
+    free(helper);
+
+}
+
+void checkCart(CartKeys *cartReference){
+
+    Cart *helper; // Create an extra pointer
+    helper = malloc(sizeof(Cart));
+    helper = cartReference->head->next; // Set the extra pointer to the first element of the cart list
+
+    if(cartReference->head->next == cartReference->tail){ // If the list is empty
+        printf("\nNo products have been added on cart!\n");
+        return;
+    }
+
+    while(helper->next != NULL){ // Print loop
+        printf("\nId: %d\nAmount: %d\n", helper->id, helper->amount);
+        helper = helper->next;
+    }
+
+    helper = NULL; // Free the alocated memory of the extra pointer
+    free(helper);
+
+}
+
+CartKeys clearCart(CartKeys *cartReference){
+
+    Cart *helper; // Create an extra pointer
+    helper = malloc(sizeof(Cart));
+    helper = cartReference->head; // Set the extra pointer to the first element of the list of products
+
+    Cart *eraser; // Create an extra pointer to free values
+
+    while(helper != NULL){ // Main loop
+
+        eraser = helper;
+        helper = helper->next; // Helper aways point to the next value to be erased
+
+        free(eraser); // Free the alocated memory on eraser
+    }
+
+    free(helper);
+
+    return *cartReference;
+}
+
+CartKeys removeCartProduct(CartKeys *cartReference){
+
+    if(cartReference->head->next == cartReference->tail){
+        printf("\nNo products have been added on your cart!\n");
+        return *cartReference;
+    }
+
+    int productId, founded = 0;
+
+    printf("\nType the product id: "); // Get te id to be deleted
+    scanf("%d", &productId);
+
+    Cart *helper; // Create an extra pointer
+    helper = malloc(sizeof(Cart));
+    helper = cartReference->head->next; // Set the extra pointer to the first element of the list of products
+
+    while(helper->next != NULL){ // Main loop
+
+        if(helper->id == productId){ // If the product is found
+
+            Cart *helperPrev; // Create another extra pointer
+            helperPrev = malloc(sizeof(Cart));
+            helperPrev = helper->prev; // Set the extra pointer to the previous element of helper
+
+            Cart *helperNext; // Create another extra pointer
+            helperNext = malloc(sizeof(Cart));
+            helperNext = helper->next; // Set the extra pointer to the next element of helper
+
+            helperPrev->next = helperNext; // Make the previous element point to next and vice versa
+            helperNext->prev = helperPrev;
+
+            free(helper); // Free the alocated memory on helper
+
+            printf("\nThe product has been removed.\n");
+
+            helperPrev = NULL; // Free alocated memory on rthe extra pointers
+            helperNext = NULL;
+            free(helperPrev);
+            free(helperNext);
+
+            founded = 1;
+            break;
+        }
+
+        helper = helper->next;
+    }
+
+    if(founded == 0){
+        printf("\nProduct not found.\n");
+    }
+
+    return *cartReference;
+
+}
+
+ProductKeys goToCart(ProductKeys *productsReference){ // Main cart function
 
     int switcher = 1; // Variable to switch between menus
+
+    CartKeys *cartReference; // Create the struct that stores the head and tail of the products list
+    cartReference = malloc(sizeof(CartKeys));
+    cartReference->head = malloc(sizeof(Cart));
+    cartReference->tail = malloc(sizeof(Cart));
+    cartReference->head->prev = NULL; // Configure head
+    cartReference->head->next = cartReference->tail;
+    cartReference->tail->next = NULL; // Configure tail
+    cartReference->tail->prev = cartReference->head;
 
     printf("\n\n  /$$$$$$                        /$$    \n /$$__  $$                      | $$    \n| $$  \\__/  /$$$$$$   /$$$$$$  /$$$$$$  \n| $$       |____  $$ /$$__  $$|_  $$_/  \n| $$        /$$$$$$$| $$  \\__/  | $$    \n| $$    $$ /$$__  $$| $$        | $$ /$$\n|  $$$$$$/|  $$$$$$$| $$        |  $$$$/\n \\______/  \\_______/|__/         \\___/  \n\n");
 
@@ -253,32 +466,34 @@ ProductKeys cart(ProductKeys *listReference){
 
         printf("\n1. Choose Products\n2. Check Cart\n3. Remove Product\n4. Checkout\n0. Cancel Purchase\n");
         printf("\nType a number between 1 and 4 to navigate or 0 to cancel purchase: ");
-        scanf("%d", &switcher); // Get where the user wanna go
+        scanf("%d", &switcher); // Get user selection
         switcher = verifyCartInput(switcher);
 
-        switch(switcher){ // Does something according to what the user typed
+        switch(switcher){ // Go to user chosen option
 
             case(0): ; // Cancel Purchase
 
                 printf("\nPurchase Being Canceled...\n");
+                
+                *cartReference = clearCart(cartReference); // Free the products list
+                free(cartReference);
 
-                // free();
-
-                return *listReference;
+                return *productsReference;
             
             case(1): ; // Choose Products
 
-                printf("WIP");
+                chooseProducts(cartReference, productsReference);
+                calculateTotalPrice(cartReference, productsReference);
                 break;
 
             case(2): ; // Check Cart
                 
-                printf("WIP");
+                checkCart(cartReference);
                 break;
 
             case(3): ; // Remove Product
                 
-                printf("WIP");
+                *cartReference = removeCartProduct(cartReference);
                 break;
 
             case(4): ; // Checkout
@@ -293,30 +508,20 @@ ProductKeys cart(ProductKeys *listReference){
     }
 }
 
-int verifyCartInput(int input){ // Verify if the user input is valid to navigate in cart menu
-
-    while(input > 4 || input < 0){ // Loop while the input is invalid
-        printf("Input not valid, try again: ");
-        scanf("%d", &input);
-    }
-
-    return input; // When valid return input
-}
-
 // Main program
 
 int main(){
 
     int switcher = 1; // Variable to switch between menus
 
-    ProductKeys *listReference; // Create the struct that stores the head and tail of the products list
-    listReference = malloc(sizeof(ProductKeys));
-    listReference->head = malloc(sizeof(Product));
-    listReference->tail = malloc(sizeof(Product));
-    listReference->head->prev = NULL; // Configure head
-    listReference->head->next = listReference->tail;
-    listReference->tail->next = NULL; // Configure tail
-    listReference->tail->prev = listReference->head;
+    ProductKeys *productsReference; // Create the struct that stores the head and tail of the products list
+    productsReference = malloc(sizeof(ProductKeys));
+    productsReference->head = malloc(sizeof(Product));
+    productsReference->tail = malloc(sizeof(Product));
+    productsReference->head->prev = NULL; // Configure head
+    productsReference->head->next = productsReference->tail;
+    productsReference->tail->next = NULL; // Configure tail
+    productsReference->tail->prev = productsReference->head;
 
     printf("\n                                           _____ _____ \n     /\\                                   / ____/ ____|\n    /  \\   _ __ ___   __ _ _______  _ __ | |   | |     \n   / /\\ \\ | '_ ` _ \\ / _` |_  / _ \\| '_ \\| |   | |     \n  / ____ \\| | | | | | (_| |/ / (_) | | | | |___| |____ \n /_/    \\_\\_| |_| |_|\\__,_/___\\___/|_| |_|\\_____\\_____|\n\n"); // Print the logo
 
@@ -324,45 +529,43 @@ int main(){
 
         printf("\n1. Register Product\n2. List Products\n3. Search Product\n4. Delete Product\n5. Buy Products\n0. Exit System\n");
         printf("\nType a number between 1 and 5 to navigate or 0 to exit the program: ");
-        scanf("%d", &switcher); // Get where the user wanna go
+        scanf("%d", &switcher); // Get user selection
         switcher = verifyMenuInput(switcher);
 
-        switch(switcher){ // Does something according to what the user typed
+        switch(switcher){ // Go to user chosen option
 
             case(0): ; // Exit System
 
                 printf("\nExiting...\n\n");
                 
-                *listReference = clearProducts(listReference); // Free the products list
-                free(listReference->head);
-                free(listReference->tail);
-                free(listReference);
+                *productsReference = clearProducts(productsReference); // Free the products list
+                free(productsReference);
 
                 exit(0); // Exit the code
             
             case(1): ; // Register Product
 
-                registerProduct(listReference);
+                registerProduct(productsReference);
                 break;
 
             case(2): ; // List Products
                 
-                listProducts(listReference);
+                listProducts(productsReference);
                 break;
 
             case(3): ; // Search Product
 
-                searchProduct(listReference);
+                searchProduct(productsReference);
                 break;
 
             case(4): ; // Delete Product
 
-                *listReference = deleteProduct(listReference);
+                *productsReference = deleteProduct(productsReference);
                 break;
 
             case(5): ; // Buy Products
 
-                *listReference = cart(listReference);
+                *productsReference = goToCart(productsReference);
                 break;
 
             default: ; // If somehow the user bypass the input verification and type a invalid number, end the program
