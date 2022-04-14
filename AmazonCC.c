@@ -26,7 +26,7 @@ typedef struct _cart { // The list of products that will be bought
    struct _product *next, *prev;
 } Cart;
 
-// Definitions of functions
+// Definitions of basic functions
 
 int verifyMenuInput(int input){ // Verify if the user input is valid to navigate in main menu
 
@@ -75,6 +75,27 @@ int verifyId(int id, ProductKeys *listReference){
     free(helper);
     
     return id;
+}
+
+ProductKeys clearProducts(ProductKeys *listReference){
+
+    Product *helper; // Create an extra pointer
+    helper = malloc(sizeof(Product));
+    helper = listReference->head; // Set the extra pointer to the first element of the list
+
+    Product *eraser; // Create an extra pointer to free values
+
+    while(helper != NULL){ // Main loop
+
+        eraser = helper;
+        helper = helper->next; // Helper aways point to the next value to be erased
+
+        free(eraser); // Free the alocated memory on eraser
+    }
+
+    free(helper);
+
+    return *listReference;
 }
 
 void registerProduct(ProductKeys *listReference){
@@ -197,9 +218,14 @@ ProductKeys deleteProduct(ProductKeys *listReference){
             helperPrev->next = helperNext; // Make the previous element point to next and vice versa
             helperNext->prev = helperPrev;
 
-            free(helper); // Free the alocated memory
+            free(helper); // Free the alocated memory on helper
 
             printf("\nThe product has been deleted.\n");
+
+            helperPrev = NULL; // Free alocated memory on rthe extra pointers
+            helperNext = NULL;
+            free(helperPrev);
+            free(helperNext);
 
             founded = 1;
             break;
@@ -213,6 +239,68 @@ ProductKeys deleteProduct(ProductKeys *listReference){
     }
 
     return *listReference;
+}
+
+// Definitions of cart functions
+
+ProductKeys cart(ProductKeys *listReference){
+
+    int switcher = 1; // Variable to switch between menus
+
+    printf("\n\n  /$$$$$$                        /$$    \n /$$__  $$                      | $$    \n| $$  \\__/  /$$$$$$   /$$$$$$  /$$$$$$  \n| $$       |____  $$ /$$__  $$|_  $$_/  \n| $$        /$$$$$$$| $$  \\__/  | $$    \n| $$    $$ /$$__  $$| $$        | $$ /$$\n|  $$$$$$/|  $$$$$$$| $$        |  $$$$/\n \\______/  \\_______/|__/         \\___/  \n\n");
+
+    while(switcher != 0){ // Main loop
+
+        printf("\n1. Choose Products\n2. Check Cart\n3. Remove Product\n4. Checkout\n0. Cancel Purchase\n");
+        printf("\nType a number between 1 and 4 to navigate or 0 to cancel purchase: ");
+        scanf("%d", &switcher); // Get where the user wanna go
+        switcher = verifyCartInput(switcher);
+
+        switch(switcher){ // Does something according to what the user typed
+
+            case(0): ; // Cancel Purchase
+
+                printf("\nPurchase Being Canceled...\n");
+
+                // free();
+
+                return *listReference;
+            
+            case(1): ; // Choose Products
+
+                printf("WIP");
+                break;
+
+            case(2): ; // Check Cart
+                
+                printf("WIP");
+                break;
+
+            case(3): ; // Remove Product
+                
+                printf("WIP");
+                break;
+
+            case(4): ; // Checkout
+                
+                printf("WIP");
+                break;
+
+            default: ; // If somehow the user bypass the input verification and type a invalid number, end the program
+                printf("ERROR - Invalid Main Menu Input");
+                break;
+        }
+    }
+}
+
+int verifyCartInput(int input){ // Verify if the user input is valid to navigate in cart menu
+
+    while(input > 4 || input < 0){ // Loop while the input is invalid
+        printf("Input not valid, try again: ");
+        scanf("%d", &input);
+    }
+
+    return input; // When valid return input
 }
 
 // Main program
@@ -230,11 +318,6 @@ int main(){
     listReference->tail->next = NULL; // Configure tail
     listReference->tail->prev = listReference->head;
 
-    printf("%p\n", listReference->head->next);
-    printf("%p\n", listReference->tail);
-    printf("%p\n", listReference->tail->prev);
-    printf("%p\n", listReference->head);
-
     printf("\n                                           _____ _____ \n     /\\                                   / ____/ ____|\n    /  \\   _ __ ___   __ _ _______  _ __ | |   | |     \n   / /\\ \\ | '_ ` _ \\ / _` |_  / _ \\| '_ \\| |   | |     \n  / ____ \\| | | | | | (_| |/ / (_) | | | | |___| |____ \n /_/    \\_\\_| |_| |_|\\__,_/___\\___/|_| |_|\\_____\\_____|\n\n"); // Print the logo
 
     while(switcher != 0){ // Main loop
@@ -249,6 +332,12 @@ int main(){
             case(0): ; // Exit System
 
                 printf("\nExiting...\n\n");
+                
+                *listReference = clearProducts(listReference); // Free the products list
+                free(listReference->head);
+                free(listReference->tail);
+                free(listReference);
+
                 exit(0); // Exit the code
             
             case(1): ; // Register Product
@@ -262,18 +351,22 @@ int main(){
                 break;
 
             case(3): ; // Search Product
+
                 searchProduct(listReference);
                 break;
 
             case(4): ; // Delete Product
+
                 *listReference = deleteProduct(listReference);
                 break;
 
             case(5): ; // Buy Products
-                printf("WIP");
+
+                *listReference = cart(listReference);
                 break;
 
             default: ; // If somehow the user bypass the input verification and type a invalid number, end the program
+
                 printf("ERROR - Invalid Main Menu Input");
                 break;
         }
