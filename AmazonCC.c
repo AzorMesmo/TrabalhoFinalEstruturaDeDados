@@ -1,4 +1,4 @@
-// Code made by Mateus Azor and Willian Almeida
+// Code made by Mateus Azor and Willian Dal Pont
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,14 +95,6 @@ void registerProduct(ProductKeys *listReference){
     placeholder->next = NULL; // Set the pointers to NULL
     placeholder->prev = NULL;
 
-    if(listReference->head->next == NULL){ // If the list is empty
-
-        listReference->head->next = placeholder; // Make head and tail point to the new element
-        listReference->tail->prev = placeholder;
-        placeholder->prev = listReference->head; // Make the new element point to head and tail
-        placeholder->next = listReference->tail;
-    }
-
     Product *helper; // Create an extra pointer
     helper = malloc(sizeof(Product));
     helper = listReference->tail->prev; // Set the extra pointer to the last element of the list
@@ -122,7 +114,12 @@ void listProducts(ProductKeys *listReference){
     helper = malloc(sizeof(Product));
     helper = listReference->head->next; // Set the extra pointer to the first element of the list
 
-    while(helper->next != NULL){
+    if(listReference->head->next == listReference->tail){ // If the list is empty
+        printf("\nNo products have been added!\n");
+        return;
+    }
+
+    while(helper->next != NULL){ // Print loop
         printf("\nId: %d\nName: %s\nPrice: $%.2f\nStock: %d\nUnity: %s\n", helper->id, helper->name, helper->price, helper->stock, helper->unity);
         helper = helper->next;
     }
@@ -131,8 +128,14 @@ void listProducts(ProductKeys *listReference){
     free(helper);
 }
 
-Product* searchProduct(ProductKeys *listReference)
+void searchProduct(ProductKeys *listReference)
 {
+    if (listReference->head->next == listReference->tail) // Checks if the list has at least one product
+    {
+        printf("\nNo products have been added.\n");
+        return;
+    }
+
     Product *aux; // Create a extra pointer
     aux = malloc(sizeof(Product));
     aux = listReference->head->next; // Set the extra pointer to the first element of the list
@@ -141,11 +144,6 @@ Product* searchProduct(ProductKeys *listReference)
 
     printf("\nType the product id: ");
     scanf("%d", &valueID);
-
-    if (aux == NULL) // Checks if the list has at least one product
-    {
-        printf("\nNo products have been added.\n");
-    }
     
     while(aux != NULL) // Seach loop
     {
@@ -168,6 +166,55 @@ Product* searchProduct(ProductKeys *listReference)
     free(aux);
 }
 
+ProductKeys deleteProduct(ProductKeys *listReference){
+
+    if(listReference->head->next == listReference->tail){
+        printf("\nNo products have been added!\n");
+        return *listReference;
+    }
+
+    int productId, founded = 0;
+
+    printf("\nType the product id: "); // Get te id to be deleted
+    scanf("%d", &productId);
+
+    Product *helper; // Create an extra pointer
+    helper = malloc(sizeof(Product));
+    helper = listReference->head->next; // Set the extra pointer to the first element of the list
+
+    while(helper->next != NULL){ // Main loop
+
+        if(helper->id == productId){ // If the product is found
+
+            Product *helperPrev; // Create another extra pointer
+            helperPrev = malloc(sizeof(Product));
+            helperPrev = helper->prev; // Set the extra pointer to the previous element of helper
+
+            Product *helperNext; // Create another extra pointer
+            helperNext = malloc(sizeof(Product));
+            helperNext = helper->next; // Set the extra pointer to the next element of helper
+
+            helperPrev->next = helperNext; // Make the previous element point to next and vice versa
+            helperNext->prev = helperPrev;
+
+            free(helper); // Free the alocated memory
+
+            printf("\nThe product has been deleted.\n");
+
+            founded = 1;
+            break;
+        }
+
+        helper = helper->next;
+    }
+
+    if(founded == 0){
+        printf("\nProduct not found.\n");
+    }
+
+    return *listReference;
+}
+
 // Main program
 
 int main(){
@@ -177,11 +224,16 @@ int main(){
     ProductKeys *listReference; // Create the struct that stores the head and tail of the products list
     listReference = malloc(sizeof(ProductKeys));
     listReference->head = malloc(sizeof(Product));
-    listReference->head->next = NULL; // Configure head
-    listReference->head->prev = NULL;
     listReference->tail = malloc(sizeof(Product));
+    listReference->head->prev = NULL; // Configure head
+    listReference->head->next = listReference->tail;
     listReference->tail->next = NULL; // Configure tail
-    listReference->tail->prev = NULL;
+    listReference->tail->prev = listReference->head;
+
+    printf("%p\n", listReference->head->next);
+    printf("%p\n", listReference->tail);
+    printf("%p\n", listReference->tail->prev);
+    printf("%p\n", listReference->head);
 
     printf("\n                                           _____ _____ \n     /\\                                   / ____/ ____|\n    /  \\   _ __ ___   __ _ _______  _ __ | |   | |     \n   / /\\ \\ | '_ ` _ \\ / _` |_  / _ \\| '_ \\| |   | |     \n  / ____ \\| | | | | | (_| |/ / (_) | | | | |___| |____ \n /_/    \\_\\_| |_| |_|\\__,_/___\\___/|_| |_|\\_____\\_____|\n\n"); // Print the logo
 
@@ -214,7 +266,7 @@ int main(){
                 break;
 
             case(4): ; // Delete Product
-                printf("WIP");
+                *listReference = deleteProduct(listReference);
                 break;
 
             case(5): ; // Buy Products
