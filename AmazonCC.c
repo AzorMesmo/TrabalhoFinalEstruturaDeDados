@@ -123,7 +123,7 @@ void listProducts(ProductKeys *listReference){
     helper = listReference->head->next; // Set the extra pointer to the first element of the list
 
     while(helper->next != NULL){
-        printf("\nId: %d\nName: %s\nPrice: %.2f\nStock: %d\nUnity: %s\n", helper->id, helper->name, helper->price, helper->stock, helper->unity);
+        printf("\nId: %d\nName: %s\nPrice: $%.2f\nStock: %d\nUnity: %s\n", helper->id, helper->name, helper->price, helper->stock, helper->unity);
         helper = helper->next;
     }
 
@@ -131,38 +131,41 @@ void listProducts(ProductKeys *listReference){
     free(helper);
 }
 
-// Search the product
-
 Product* searchProduct(ProductKeys *listReference)
 {
     Product *aux; // Create a extra pointer
-    int valueID;
     aux = malloc(sizeof(Product));
     aux = listReference->head->next; // Set the extra pointer to the first element of the list
 
-    printf("\nEnter the product code to the view it ");
+    int valueID, founded = 0;
+
+    printf("\nType the product id: ");
     scanf("%d", &valueID);
 
-    if (aux == NULL) // Checks if aux was ever created
+    if (aux == NULL) // Checks if the list has at least one product
     {
-        printf("\nProduct not found :(\n");
+        printf("\nNo products have been added.\n");
     }
     
-    for (; aux != NULL; aux = aux->next) // Checks if aux was ever created
+    while(aux != NULL) // Seach loop
     {
         if (valueID == aux->id) // Compares if the value of the id entered is equal to the id in the list
         {
-            printf("\nProduct found :)\n\n");
+            printf("\nProduct found.\n\n");
             printf("Name: %s\nPrice: $%.2f\nAmount: %d %s\n", aux->name, aux->price, aux->stock, aux->unity);
-            break;
-        }else
-        {
-            printf("\nProduct not found :(\n");
+            founded = 1;
             break;
         }
-        aux->next = NULL; // Free the alocated memory of the extra pointer (aux)
-        free(aux);
+
+        aux = aux->next;
     }
+
+    if(founded == 0){
+        printf("\nProduct not found.\n");
+    }
+
+    aux = NULL; // Free the alocated memory of the extra pointer (aux)
+    free(aux);
 }
 
 // Main program
