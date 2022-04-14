@@ -244,6 +244,8 @@ ProductKeys updateProducts(ProductKeys *productsReference, Product *head, Produc
 
     while(head != NULL){ // Main loop
 
+        // For some reason helper is currupted, so this function is not working
+
         helper = productsReference->head->next; // Set the extra pointer to the first element of the old list of products
 
         while(helper->next != NULL){ // Secundary loop
