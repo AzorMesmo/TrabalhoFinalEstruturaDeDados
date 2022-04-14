@@ -2,35 +2,36 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 // Definitions of structs
 
-typedef struct _product { // The product itself
+struct _product {
    int id;
-   char name[50];
+   char name[30];
    float price;
    int stock;
    struct _product *next, *prev;
-} Product;
-
-typedef struct { // Stores both tips of our product list 
+};
+typedef struct _product Product;
+ 
+typedef struct {
    Product *head;
    Product *tail;
 } ProductKeys;
 
-typedef struct _cart { // The list of products that will be bought
+struct _cart {
    int id;
    int amount;
    struct _product *next, *prev;
-} Cart;
+};
+typedef struct _cart Cart;
 
 typedef struct { // Stores both tips of our cart list 
    Cart *head;
    Cart *tail;
 } CartKeys;
 
-// Definitions of basic functions
+// Definitions of main functions
 
 int verifyMenuInput(int input){ // Verify if the user input is valid to navigate in main menu
 
@@ -161,7 +162,6 @@ Product searchProduct(ProductKeys *productsReference){
 
     if(productsReference->head->next == productsReference->tail){ // Checks if the list has at least one product
         printf("\nNo products have been added.\n");
-        helper->id = -1;
         return *helper;
     }
 
@@ -183,7 +183,6 @@ Product searchProduct(ProductKeys *productsReference){
 
     printf("\nProduct not found.\n");
     helper = productsReference->head->next;
-    helper->id = -1;
     return *helper;
 }
 
@@ -239,6 +238,30 @@ ProductKeys deleteProduct(ProductKeys *productsReference){
     }
 
     return *productsReference;
+}
+
+ProductKeys updateProducts(ProductKeys *productsReference, Product *head, Product *helper){
+
+    while(head != NULL){ // Main loop
+
+        helper = productsReference->head->next; // Set the extra pointer to the first element of the old list of products
+
+        while(helper->next != NULL){ // Secundary loop
+
+            if(helper->id == head->id){ // Compare the products, if it's the same
+                helper->stock = head->stock; // Update stock
+                break;
+            }
+
+            helper = helper->next; // Else, go to the next
+
+        }
+
+        head = head->next; // Go to the next updated product
+    }
+
+    return *productsReference;
+
 }
 
 // Definitions of cart functions
@@ -301,7 +324,7 @@ void chooseProducts(CartKeys *cartReference, ProductKeys *productsReference){
 
 }
 
-Product searchProductById(ProductKeys *productsReference, int id){
+Product searchProductById(ProductKeys *productsReference, int id, int print){ // If print equals to 1, print, else, don't print
 
     Product *helper; // Create a extra pointer
     helper = malloc(sizeof(Product));
@@ -310,8 +333,10 @@ Product searchProductById(ProductKeys *productsReference, int id){
     while(helper != NULL){ // Seach loop
 
         if (id == helper->id){ // Verify if the value of the id entered is equal to the id in the list
-            printf("\nProduct found.\n"); // Print the product and exit the loop
-            printf("\nName: %s\nPrice: $%.2f\nAmount: %d\n", helper->name, helper->price, helper->stock);
+            if(print == 1){
+                printf("\nProduct found.\n"); // Print the product and exit the loop
+                printf("\nName: %s\nPrice: $%.2f\nAmount: %d\n", helper->name, helper->price, helper->stock);
+            }
             return *helper;
         }
 
@@ -337,13 +362,13 @@ void calculateTotalPrice(CartKeys *cartReference, ProductKeys *productsReference
 
     while(helper->next != NULL){ // Main loop
 
-        *product = searchProductById(productsReference, helper->id); // Stores the product
+        *product = searchProductById(productsReference, helper->id, 1); // Stores the product
         total = total + (product->price * helper->amount); // Calculate total
         
         helper = helper->next;
     }
 
-    printf("\nThe cart price total it's $%.2f\n", total);
+    printf("\nThe cart total price it's $%.2f\n", total);
 
     helper = NULL; // Free the alocated memory of the extra pointer
     free(helper);
@@ -447,7 +472,48 @@ CartKeys removeCartProduct(CartKeys *cartReference){
 
 }
 
-ProductKeys goToCart(ProductKeys *productsReference){ // Main cart function
+Product checkout(CartKeys *cartReference, ProductKeys *productsReference){
+
+    int first = 1;
+
+    Cart *cartHelper; // Create an extra cart pointer
+    cartHelper = malloc(sizeof(Cart));
+    cartHelper = cartReference->head->next; // Set the extra pointer to the first element of the cart list
+
+    Product *productHelper; // Create an extra product pointer
+    productHelper = malloc(sizeof(Product));
+    productHelper = productsReference->head;
+
+    Product *productPlaceholder; // Create another extra product pointer
+    productPlaceholder = malloc(sizeof(Product));
+
+    Product *productHead; // Create another extra product pointer to store the "head" of the list
+    productHead = malloc(sizeof(Product));
+
+    while(cartHelper->next != NULL){ // Main loop
+
+        *productHelper = searchProductById(productsReference, cartHelper->id, 0); // Search the product
+        productHelper->stock = productHelper->stock - cartHelper->amount; // Reduce the stock
+
+        productPlaceholder = productHelper; // Stores the new product informations in placeholder
+
+        if(first == 1){ // If is the first element
+            productHead = productPlaceholder; // Make the start of a pile
+            productPlaceholder->next = NULL;
+            first = 0;
+        }else{
+            productPlaceholder->next = productHead; // Continue the pile
+            productHead = productPlaceholder;
+        }
+        
+        cartHelper = cartHelper->next; // Go to the next
+    }
+
+    return *productHead; // Return the pile
+    
+}
+
+Product goToCart(ProductKeys *productsReference){ // Main cart function
 
     int switcher = 1; // Variable to switch between menus
 
@@ -478,32 +544,42 @@ ProductKeys goToCart(ProductKeys *productsReference){ // Main cart function
                 *cartReference = clearCart(cartReference); // Free the products list
                 free(cartReference);
 
-                return *productsReference;
+                return;
             
             case(1): ; // Choose Products
 
                 chooseProducts(cartReference, productsReference);
                 calculateTotalPrice(cartReference, productsReference);
+                
                 break;
 
             case(2): ; // Check Cart
                 
                 checkCart(cartReference);
+                
                 break;
 
             case(3): ; // Remove Product
                 
                 *cartReference = removeCartProduct(cartReference);
+                
                 break;
 
             case(4): ; // Checkout
+
+                Product *head; // Create a extra product pointer
+                head = malloc(sizeof(Product));
                 
-                printf("WIP");
-                break;
+                calculateTotalPrice(cartReference, productsReference); // Show the price
+                *head = checkout(cartReference, productsReference); // Store the updated product pile
+                
+                return *head;
 
             default: ; // If somehow the user bypass the input verification and type a invalid number, end the program
+
                 printf("ERROR - Invalid Main Menu Input");
-                break;
+                
+                return;
         }
     }
 }
@@ -565,7 +641,16 @@ int main(){
 
             case(5): ; // Buy Products
 
-                *productsReference = goToCart(productsReference);
+                Product *head; // Create an extra product pointer to store the pile of updated products
+                head = malloc(sizeof(Product));
+
+                Product *helper; // Create an extra product pointer to store the old products
+                helper = malloc(sizeof(Product));
+
+                *head = goToCart(productsReference);
+
+                *productsReference = updateProducts(productsReference, head, helper); // Update the products
+
                 break;
 
             default: ; // If somehow the user bypass the input verification and type a invalid number, end the program
